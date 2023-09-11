@@ -49,16 +49,16 @@ label{
     float: left;
     width: 150px;
 }
+.popular .pop {
+margin-left: 20px;
+}
 .disease{
-    display: flex;
-    justify-content: space-evenly;
+    display: grid;
+   grid-template-columns: auto auto auto auto;
 }
 .disease p{
     font-size: 20px;
-}
-.disease .ch::before{
-    background-image: url("sprite-new-diag.png");
-
+    margin-left: 25px;
 }
 .popular{
     background-color: white;
@@ -72,7 +72,12 @@ label{
     font-size: 18px;
     font-family: 'Gloock', serif;
 }
-
+.sp .sllp{
+    margin-left: 25px;
+}
+.sp .sllp h2{
+    margin-top: 15px;
+}
 .swasthya{
     background-color: antiquewhite;
     margin:10px;
@@ -418,18 +423,7 @@ hr{
         width: 160px;
     }
 }
-@media screen and (max-width:750px){
-    body > div > div.sp > div{
-        display: grid;
-        grid-template-columns: auto auto auto;
-    }
-}
-@media screen and (max-width:560px){
-    body > div > div.sp > div{
-        display: grid;
-        grid-template-columns: auto auto;
-    }
-}
+
 @media  screen and (max-width:926px) {
    .swasthya .swa-matter{
        text-align: center;
@@ -454,5 +448,43 @@ hr{
     }
     50%{
         opacity:1;
+    }
+}
+
+
+@media screen and (max-width:1393px){
+   .screens img{
+     display: none;
+   }
+   .nhealthy img{
+    display: none;
+   }
+}
+@media screen and (max-width:920px) {
+    .sp img{
+       display: none;
+    }
+    .selling {
+        display: grid;
+       grid-template-columns: auto auto auto;
+    }
+    .hh{
+        display: flex;
+    }
+    .foot{
+        display: grid;
+        grid-template-columns: auto auto auto;
+    }
+}
+@media screen and (max-width:776px) {
+    .selling {
+        display: grid;
+       grid-template-columns: auto auto;
+    }
+    .shield-matter {
+        position: relative;
+    }
+    .swa-matter {
+        position: relative;
     }
 }

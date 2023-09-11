@@ -1,14 +1,16 @@
 var form = document.getElementById('fm');
 function lab(){
-    return (nameValidation() && numberValidation() && codeValidation() && packageValidation()&&testValidation())
+    return (nameValidation() && numberValidation() && codeValidation()&& packageValidation()&&testValidation())
   }
-  
+var namePattern = /^[A-Za-z\s]+$/;
+var numberPattern = /^[6-9]\d{9}$/;
+var pincodePattern = /^\d{6}$/;
 function nameValidation(){
  
     const username = document.getElementById('name');
     const fname = document.getElementById('nerror');
-    if(username.value == "" || username.value == null){
-        fname.innerHTML="Username is required"
+    if(!namePattern.test(username.value)){
+        fname.innerHTML="Username is does not match"
         fname.style.display='block';
         return false;
     }
@@ -22,7 +24,7 @@ function numberValidation(){
     const number = document.getElementById('number')
     const fname = document.getElementById('merror');
     if(number.value == "" || number.value == null){
-        fname.innerHTML="Phone Number contains 10 digits"
+        fname.innerHTML="It is not a valid phone number!"
         fname.style.display='block';
         return false;
     }

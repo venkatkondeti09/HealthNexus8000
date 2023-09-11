@@ -50,18 +50,21 @@
         <img class="form1" src="https://www.netmeds.com/images/cms/wysiwyg/cms/1674462961_WhatsApp_Image_2023-01-23_at_13.57.07.jpg" alt="">
         <div class="formfill" id="bn">
           <form class="form1" onsubmit="return lab()" id="fm" action="/labtests" method="post">
-            <p>Please fill in your details </p>
-            <label for="name" >NAME</label><br>
-            <input type="text" name="name" id="name" maxlength="50" >
+            <p>Please fill in your details</p>
+    
+            <label for="name">NAME</label><br>
+            <input type="text" name="name" id="name" maxlength="50">
             <div class="error" id="nerror"></div><br>
-            <label for="number">MOBILE NUMBER</label>
-            <br>
+    
+            <label for="number">MOBILE NUMBER</label><br>
             <input type="tel" pattern="[6-9][0-9]{9}" name="number" id="number">
             <div class="error" id="merror"></div><br>
+    
             <label for="pincode">PINCODE</label><br>
-            <input type="tel" name="formfill3" id="pincode" maxlength="6" >
+            <input type="tel" name="formfill3" id="pincode" maxlength="6">
             <div class="error" id="perror"></div><br>
-            <label for="package" id="ff" >CHOOSE PACKAGE</label><br>
+    
+            <label for="package" id="ff">CHOOSE PACKAGE</label><br>
             <input list="medic" id="package" name="package">
             <datalist id="medic">
                 <option value="Aarogyam A">Aarogyam A</option>
@@ -78,7 +81,7 @@
                 <option value="Aarogyam xl">Aarogyam XL</option>
             </datalist>
             <div class="error" id="gerror"></div><br>
-            <label for="tet" id="11" >CHOOSE Test</label><br>
+            <label for="tet" id="11" >CHOOSE TEST</label><br>
             <input list="medicover" id="test" name="test">    
             <datalist id="medicover">
                     <option class="scroll">Liver Profile</option>
@@ -100,7 +103,8 @@
                     <option class="scroll">PRL</option>
             </datalist>
             <div class="error" id="terror"></div><br>
-            <input type="checkbox">I agree to HealthNexus Terms and Conditions. <br>
+            <input type="checkbox" id="terms">I agree to HealthNexus Terms and Conditions. <br>
+            <div class="error" id="tncerror"></div><br>
             <button type="submit" name="BOOK NOW" >BOOK NOW</button>
         
         
@@ -108,17 +112,16 @@
     </div>
     </div>
     <div class="popular">
+      <div class="pop">
         <h2>Popular Tests</h2>
         <p>and many more tests and packages <span style="font-size: 20px;">@ THE BEST PRICES</span></p>
-    
+      </div>
+       
    <div class="disease">
-    <p class="ch">THyroid Profile</p>
+    <p>Thyroid Profile</p>
     <p>Liver Profile</p>
     <p>Lipid Profile</p>
     <p>Diabets</p>
-   
-   </div>
-   <div class="disease">
     <p>Iron Deficiency</p> 
     <p>Testosterone</p> 
     <p>Complete Hemogram</p>
@@ -128,8 +131,10 @@
 
 </div>
   <div class="sp">
-    <h2>Top Selling Packages</h2>
-    <p>Choose from the list of top-selling packages tailored for you. We care for your health!</p>
+    <div class="sllp">
+      <h2>Top Selling Packages</h2>
+      <p>Choose from the list of top-selling packages tailored for you. We care for your health!</p>  
+    </div>
     
 <div class="selling">
   <div class="swasthya">
