@@ -41,24 +41,111 @@ const Token = require('./models/Token');
 const User = require('./models/user');
 
 app.use(express.urlencoded({ extended: true }));
-
-// Route to display the user's cart
-app.get('/usercart', fectuser, async (req, res) => {
+app.get('/usercart', async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming your user schema has an 'id' field
+    const userToken = req.query.token;
+    const tokenDocument = await Token.findOne({ token: userToken });
 
-    // Fetch the user's cart based on the userId
+    if (!tokenDocument) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const userId = tokenDocument.user;
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
-    // Access the user's cart
     const cartItems = user.cart;
+    res.render('usercart', { cartItems });
 
-    // Send the cart items as a JSON response
-    res.json({ cartItems });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/orderhistory', async (req, res) => {
+  try {
+    const userToken = req.query.token;
+    const tokenDocument = await Token.findOne({ token: userToken });
+
+    if (!tokenDocument) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    const userId = tokenDocument.user;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const cartItems = user.cart;
+    res.render('orderhistory', { cartItems });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.put('/updateitem', fectuser, async (req, res) => {
+  const itemName = req.query.name;
+  const newQuantity = req.query.quantity;
+
+  try {
+    const userToken = req.query.token;
+    const tokenDocument = await Token.findOne({ token: userToken });
+
+    if (!tokenDocument) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const userId = tokenDocument.user;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const itemToUpdate = user.cart.find((item) => item.name === itemName);
+
+    if (!itemToUpdate) {
+      return res.status(404).json({ error: 'Item not found in cart' });
+    }
+    const oldQuantity = itemToUpdate.quantity || 1;
+    const quantityChange = newQuantity - oldQuantity;
+    itemToUpdate.quantity = newQuantity;
+    await user.save();
+    res.json({ oldQuantity, newQuantity });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'An error occurred' });
+  }
+});
+app.delete('/deleteitem', async (req, res) => {
+  const itemName = req.query.name;
+
+  try {
+    const userToken = req.query.token;
+    const tokenDocument = await Token.findOne({ token: userToken });
+
+    if (!tokenDocument) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    const userId = tokenDocument.user;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const itemIndex = user.cart.findIndex((item) => item.name === itemName);
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: 'Item not found in cart' });
+    }
+    user.cart.splice(itemIndex, 1);
+    await user.save();
+
+    res.json({ message: 'Item deleted from cart successfully' });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'An error occurred' });
@@ -66,34 +153,40 @@ app.get('/usercart', fectuser, async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // Completed succesful  signup to ajax 
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
-  
+  const validationErrors = [];
+  if (name.length < 5) {
+    validationErrors.push("Name should be at least 5 characters");
+  }
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
+  if (!passwordRegex.test(password)) {
+    validationErrors.push("Password should contain one capital letter and a special character");
+  }
+  const emailRegex = /@/;
+  if (!emailRegex.test(email)) {
+    validationErrors.push("Invalid email format");
+  }
+
+  if (validationErrors.length > 0) {
+    return res.status(200).json({ validationErrors });
+  }
   try {
     const existingUser = await User.findOne({ email });
-    
+
     if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
+      validationErrors.push("User already Exists");
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
 
-    const authToken = jwt.sign({ userId: newUser._id }, JWT_sceret); 
+    if (email === "admin@gmail.com") {
+      return res.redirect('/adminportal');
+    }
+    const authToken = jwt.sign({ userId: newUser._id }, JWT_sceret);
 
     const tokenInstance = new Token({
       token: authToken,
@@ -106,27 +199,35 @@ app.post("/signup", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-
-
-// complted succesful login to ajax 
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password} = req.body;
+  const validationErrors = [];
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
+  if (!passwordRegex.test(password)) {
+    validationErrors.push("Invalid password");
+  }
+  const emailRegex = /@/;
+  if (!emailRegex.test(email)) {
+    validationErrors.push("Invalid email format");
+  }
+
+  if (validationErrors.length > 0) {
+    return res.status(200).json({ validationErrors });
+  }
 
   try {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      validationErrors.push('User not found');
     }
 
-    const passwordMatch = bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      validationErrors.push('Wrong password');
     }
-
-    // Create a new token instance and associate it with the user
-    const authToken = jwt.sign({ userId: user._id }, JWT_sceret); 
+    const authToken = jwt.sign({ userId: user._id }, JWT_sceret);
 
     const tokenInstance = new Token({
       token: authToken,
@@ -135,12 +236,11 @@ app.post("/login", async (req, res) => {
     await tokenInstance.save();
 
     res.status(200).json({ authToken });
+
   } catch (error) {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-
-
 
 
 app.listen(port, function () {
@@ -148,74 +248,24 @@ app.listen(port, function () {
 });
 
 const medicine1 = require('./models/medicine1');
-app.get("/swiper_content",(req, res) => {
-  medicine1.find({}) 
-  .then((x) => {
+app.get("/swiper_content", (req, res) => {
+  medicine1.find({})
+    .then((x) => {
       res.render('swiper_content', { x })
-  }).catch((y) => {
+    }).catch((y) => {
       console.log(y);
       console.log('error in index')
-  })
+    })
 
 });
 
-// Import necessary modules and models
-const Cart = require('./models/cart'); // Replace with actual path to the Cart model
-
-// Define a function to extract user ID from token
+const Cart = require('./models/cart');
 function getUserIdFromToken(req) {
-  const token = req.headers.authorization.split(' ')[1]; // Assuming token is sent in the "Bearer" format
-  const decodedToken = jwt.verify(token, 'your-secret-key'); // Replace with your actual secret key
+  const token = req.headers.authorization.split(' ')[1]; 
+  const decodedToken = jwt.verify(token, 'your-secret-key'); 
   return decodedToken.userId;
 }
 
-// Route to update a cart item's quantity
-app.post('/updateCartItem', async (req, res) => {
-  const { name, quantity } = req.body;
-
-  try {
-    const userId = getUserIdFromToken(req);
-    const user = await User.findById(userId);
-
-    // Update the cart item's quantity
-    const cartItem = user.cart.find(item => item.name === name);
-    if (cartItem) {
-      cartItem.quantity = parseInt(quantity);
-    }
-
-    await user.save();
-
-    // Calculate new subtotal based on updated quantity and price
-    const newSubtotal = user.cart.reduce((subtotal, item) => subtotal + (item.price * item.quantity), 0);
-
-    res.json({ newSubtotal }); // Send updated data back to the client
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-
-// Route to delete a cart item
-app.post('/deleteCartItem', async (req, res) => {
-  const { name } = req.body;
-
-  try {
-    const userId = getUserIdFromToken(req);
-    const user = await User.findById(userId);
-
-    // Delete the cart item from the user's cart
-    user.cart = user.cart.filter(item => item.name !== name);
-    await user.save();
-
-    // Delete the cart item from the Cart collection (if needed)
-    await Cart.deleteOne({ name });
-
-    res.json({ message: 'Item deleted' }); // Send response back to the client
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
 
 
 
@@ -1090,15 +1140,10 @@ app.get("/Doctorsportal", function (req, res) {
 
 app.post('/doctorlogin', async (req, res) => {
   const data = {
-    Name: req.body.Name,
-    mail: req.body.Email,
-    date_of_birth: req.body.DOB,
-    City: req.body.City,
-    Country: req.body.Country,
+    Name: req.body.fullname,
+    mail: req.body.email,
+    date_of_birth: req.body.date,
     password: req.body.password,
-    Language: req.body.Language,
-    Medical_school: req.body.MedSch,
-    MedicalId: req.body.MedID,
     Specility: req.body.Specility
   }
 
@@ -1147,10 +1192,12 @@ app.post("/Doctorsportal", function (req, res) {
 
           res.render("Doctorsportal", { user: use, patient: k });
         } else {
-          res.status(400).json({ error: "password doesn't match" });
+          // res.status(400).json({ error: "password doesn't match" });
+          res.render("Doctorlogin");
         }
       } else {
-        res.status(400).json({ error: "User doesn't exist,signup please!" });
+        // res.status(400).json({ error: "User doesn't exist,signup please!" });
+        res.render("Doctorlogin");
       }
     })
 
